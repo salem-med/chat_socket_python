@@ -9,7 +9,7 @@ connected_devices = []
 def service(client, addr):
     #Un nouveau utilisateur est connecté
     salutation = str(addr[0]) + " est connecté"
-    save_in_file(salutation) #this
+    # save_in_file(salutation) #this
     print("\n" + salutation)
 
     msg = {
@@ -30,7 +30,7 @@ def service(client, addr):
         return
 
     info = nom + " a joint la conversation."
-    save_in_file(info) #this
+    # save_in_file(info) #this
     print(info)
     msg["msg"] = info
     msg["opt"] = "notification"
@@ -89,7 +89,7 @@ def service(client, addr):
                         for clt in connected_devices:
                             print(clt[1], end="\n")
 
-            save_in_file(msg_obj)
+            # save_in_file(msg_obj)
 
             sendToAll(msg=msg_obj)
 
@@ -115,15 +115,15 @@ def sendToAll(msg, nom=""):
 #             clt[0].send(json.dumps(msg).encode("UTF-8"))
 
 #Fonction d'enregistrement des logs
-def save_in_file(msg):
-    with open("server_log.data", "w") as f:
-        chaine = ""
-        for element in msg:
-            if type(element) is str:
-                chaine += element + ", "
-            else:
-                chaine.join(element)
-        f.write(chaine + "\n")
+# def save_in_file(msg):
+#     with open("server_log.data", "w") as f:
+#         chaine = ""
+#         for element in msg:
+#             if type(element) is str:
+#                 chaine += element + ", "
+#             else:
+#                 chaine.join(element)
+#         f.write(chaine + "\n")
 
 #Fonction principale
 def main():

@@ -127,7 +127,8 @@ def save_in_xml():
     #Enregistrement
     with open(nom_fichier, "w") as f:
         f.write(a_enregistrer)
-    print("Fichier enregistré : " + os.path.dirname(__file__) + "/" + nom_fichier)
+
+    print("Fichier enregistré dans le dossier ou se trouve l'exécutable")
 
 if __name__ == "__main__":
     main()
