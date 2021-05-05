@@ -3,12 +3,60 @@ import threading
 import datetime
 import os
 import json
+from sqlalchemy import *
+import psycopg2
+import sqlite3
+from sqlalchemy.pool import StaticPool
 
 connected_devices = []
+
+# engine = create_engine("postgresql+psycopg2://openpg:openpgpwd@localhost/chat", echo=True)
+engine = create_engine('sqlite://',
+                        connect_args={"check_same_thread": False},
+                        poolclass=StaticPool,
+                        echo=True)
+
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = "users"
+    # nom = Column(String, nullable=True)
+    # prenom = Column(String, nullable=True)
+    # date_naissance = Column(DateTime, nullable=True)
+    pseudo = Column(String(25), nullable=False)
+    idU = Column(Integer, primary_key=True)
+
+    def __init__(self, pseudo):
+        self.pseudo = pseudo
+
+Base.metadata.create_all(engine)
+
+from sqlalchemy import ForeignKey
+class Message(Base):
+    __tablename__ = "messages"
+    idM = Column(Integer, primary_key=True)
+    contenu = Column(String, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.idU'))
+    user = relationship("User", back_populates="messages")
+
+    def __init__(self, contenu):
+        self.contenu = contenu
+
+User.messages = relationship("Message", order_by=Message.idM, back_populates="user")
 
 def service(client, addr):
     #Un nouveau utilisateur est connecté
     salutation = str(addr[0]) + " est connecté"
+
+    from sqlalchemy.orm import sessionmaker
+    global engine
+
+    Session = sessionmaker(bind=engine)
+
+    sess = Session()
+
     # save_in_file(salutation) #this
     print("\n" + salutation)
 
@@ -30,6 +78,9 @@ def service(client, addr):
         return
 
     info = nom + " a joint la conversation."
+
+    usr = User(nom)
+
     # save_in_file(info) #this
     print(info)
     msg["msg"] = info
@@ -45,6 +96,16 @@ def service(client, addr):
     while True:
         try:
             msg_depuis_client = client.recv(2048).decode("UTF-8")
+
+            #save new message
+            msg = Message(contenu=msg_depuis_client)
+            usr.messages.append(msg)
+
+            engine.echo = False
+            sess.add(usr)
+            sess.commit()
+            contenus = [msg.contenu for msg in sess.query(Message).all()]
+            print(contenus)
 
             date_heure = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
 
@@ -127,6 +188,8 @@ def sendToAll(msg, nom=""):
 
 #Fonction principale
 def main():
+
+    Base.metadata.create_all(engine)
     try:
         print('\n' + '\t' * 4 + "******************* Configuration du serveur *********************", end="\n")
 
